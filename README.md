@@ -28,3 +28,6 @@ Tyen, G., Brenchley, M., Caines, A., & Buttery, P. (2022). Towards an open-domai
 * `sample_wordlist.txt` is the 5000 most frequent words from [this list](https://github.com/first20hours/google-10000-english/blob/d0736d492489198e4f9d650c7ab4143bc14c1e9e/google-10000-english-no-swears.txt)
 * `filter.txt` was taken from [this list](https://github.com/dwyl/english-words/blob/22d7c41119076750a96fca2acd664ed994cc0a75/words_alpha.txt)
 * `complexity_model` was trained on data from the Cambridge Exams readability dataset, found [here](https://ilexir.co.uk/datasets/index.html)
+
+# Acknowledgements
+This paper reports on research supported by Cambridge University Press & Assessment. This work was performed using resources provided by the Cambridge Service for Data Driven Discovery (CSD3) operated by the [University of Cambridge Research Computing Service](www.csd3.cam.ac.uk), provided by Dell EMC and Intel using Tier-2 funding from the Engineering and Physical Sciences Research Council (capital grant EP/P020259/1), and [DiRAC funding from the Science and Technology Facilities Council](www.dirac.ac.uk).

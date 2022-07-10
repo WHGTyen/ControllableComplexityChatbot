@@ -61,9 +61,9 @@ class ControllableBlender(TransformerGeneratorAgent):
         beam_size = self.opt.get('beam_size', 1)
         if method == 'vocab':
             return VocabTopKSampling(
-                self.opt.get('topk', 40),
-                self.wordlist,
-                beam_size,
+                k=self.opt.get('topk', 40),
+                wordlist=self.wordlist,
+                beam_size=beam_size,
                 min_length=self.beam_min_length,
                 block_ngram=self.beam_block_ngram,
                 context_block_ngram=self.beam_context_block_ngram,
@@ -76,10 +76,10 @@ class ControllableBlender(TransformerGeneratorAgent):
             )
         elif method == "rerank":
             return RerankedTopKSampling(
-                self.opt.get('topk', 40),
-                self.reranker,
-                self._v2t,
-                beam_size,
+                k=self.opt.get('topk', 40),
+                reranker=self.reranker,
+                tokenids_to_text=self._v2t,
+                beam_size=beam_size,
                 min_length=self.beam_min_length,
                 block_ngram=self.beam_block_ngram,
                 context_block_ngram=self.beam_context_block_ngram,

@@ -176,7 +176,7 @@ class Reranker():
 
             self.token_penalties = torch.tensor([token_penalties])
 
-    def get_complexity_scores(self, hyps: str) -> np.ndarray:
+    def get_complexity_scores(self, hyps: List[str]) -> np.ndarray:
         model_inputs = self.tokenizer(hyps,
                                       padding='max_length',
                                       truncation=True,

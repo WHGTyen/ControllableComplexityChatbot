@@ -4,7 +4,7 @@ This repository contains the code, models, and data accompanying our paper on ad
 Tyen, G., Brenchley, M., Caines, A., & Buttery, P. (2022). Towards an open-domain chatbot for language practice. 17th Workshop on Innovative Use of NLP for Building Educational Applications.
 
 # Dependencies
-* ParlAI 1.5.1 (https://github.com/facebookresearch/ParlAI/tree/7c2b199d0b315c9016072897d849811cfc8a5073)
+* ParlAI 1.6.0
 * PyTorch 1.10.2
 * Huggingface Transformers 4.16.2
 * NumPy 1.22.2
@@ -17,12 +17,13 @@ Tyen, G., Brenchley, M., Caines, A., & Buttery, P. (2022). Towards an open-domai
    `cd ControllableComplexityChatbot`
 2. Install pip dependencies
    `pip install numpy scipy regex torch transformers`
-3. Install ParlAI
-   `git clone https://github.com/facebookresearch/ParlAI.git`
+3. Clone ParlAI repository
+   `git clone https://github.com/facebookresearch/ParlAI.git --branch 1.6.0`
+4. Setup ParlAI
    `cd ParlAI; python setup.py develop; cd ..`
-4. To run the demo:
+5. To run the demo:
    `python demo.py`
-5. To adjust generation parameters, edit values in `demo.py`
+6. To adjust generation parameters, edit values in `demo.py`
    
 # Data
 * `sample_wordlist.txt` is the 5000 most frequent words from [this list](https://github.com/first20hours/google-10000-english/blob/d0736d492489198e4f9d650c7ab4143bc14c1e9e/google-10000-english-no-swears.txt)

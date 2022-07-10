@@ -7,12 +7,12 @@ import regex
 from scipy.stats import rankdata
 
 import torch
-from parlai.core.torch_generator_agent import TreeSearch, _HypothesisTail, _PathSelection
+from parlai.core.torch_generator_agent import TopKSampling, TreeSearch, _HypothesisTail, _PathSelection
 from parlai.utils.torch import neginf
 
 from .generation_utils import Reranker, Wordlist
 
-class VocabTopKSampling(TreeSearch):
+class VocabTopKSampling(TopKSampling):
 
     def __init__(self,
                  k: int,
@@ -25,7 +25,6 @@ class VocabTopKSampling(TreeSearch):
     def select_paths(self, logprobs, prior_scores, current_length) -> _PathSelection:
         """
         Select the next vocabulary item in these beams.
-        Adapted from top-k sampling https://github.com/facebookresearch/ParlAI/blob/89b2c02d26f90588ace792564e2e6ce964e7fcf1/parlai/core/torch_generator_agent.py
         """
         if len(self.all_scores) > 1:
             for hypid in range(self.beam_size):
@@ -53,7 +52,7 @@ class RerankedTopKSampling(TreeSearch):
     def select_paths(self, logprobs, prior_scores, current_length) -> _PathSelection:
         """
         Select the next vocabulary item in these beams.
-        Adapted from top-k sampling https://github.com/facebookresearch/ParlAI/blob/89b2c02d26f90588ace792564e2e6ce964e7fcf1/parlai/core/torch_generator_agent.py
+        Adapted from top-k sampling https://github.com/facebookresearch/ParlAI/blob/054a0fff8183e357727dc7a91682496734badb7f/parlai/core/torch_generator_agent.py
         """
         values, indices = logprobs.topk(self.k, dim=-1)
         probs = torch.softmax(values, dim=-1)
@@ -68,23 +67,28 @@ class RerankedTopKSampling(TreeSearch):
         scores = values[hyp_ids, choices]
         best_scores = prior_scores.expand_as(scores) + scores
 
-        tok_scores, tok_ranks = None, None
+        token_details: Optional[List[_PathSelectionTokenDetails]] = None
         if self.verbose:
-            tok_scores = scores.view(-1)
-            tok_ranks = choices.view(-1)
+            tok_logprobs = probs[hyp_ids, choices].log().view(-1).cpu().numpy()
+            tok_ranks = choices.view(-1).cpu().numpy()
+            token_details = []
+
+            for tok_logprob, tok_rank in zip(tok_logprobs, tok_ranks):
+                token_details.append(
+                    {"token_logprob": tok_logprob, "token_rank": int(tok_rank)}
+                )
 
         return _PathSelection(
             hypothesis_ids=hyp_ids,
             token_ids=tok_ids,
             scores=best_scores,
-            token_scores=tok_scores,
-            token_ranks=tok_ranks,
+            token_details=token_details,
         )
 
 
     def get_rescored_finished(self, n_best=None):
         """
-        Adapted version of code taken from https://github.com/facebookresearch/ParlAI/blob/master/parlai/core/torch_generator_agent.py
+        Adapted version of code taken from https://github.com/facebookresearch/ParlAI/blob/054a0fff8183e357727dc7a91682496734badb7f/parlai/core/torch_generator_agent.py
         Adds complexity scoring and reranking.
 
         Original description:
@@ -110,11 +114,8 @@ class RerankedTopKSampling(TreeSearch):
                     hypid=0,
                     score=self.all_scores[-1][0],
                     tokenid=self.outputs[-1][0],
-                    token_score=self.token_scores[0, -1]
-                    if self.token_scores is not None
-                    else None,
-                    token_rank=self.token_ranks[0, -1]
-                    if self.token_ranks is not None
+                    token_details=self.token_details[0][-1]
+                    if self.token_details is not None
                     else None,
                 )
             )
@@ -160,10 +161,9 @@ class RerankedTopKSampling(TreeSearch):
                 _HypothesisTail(
                     timestep=finished_item.timestep,
                     hypid=finished_item.hypid,
-                    score=score,
+                    score=finished_item.score / length_penalty,
                     tokenid=finished_item.tokenid,
-                    token_score=finished_item.token_score,
-                    token_rank=finished_item.token_rank,
+                    token_details=finished_item.token_details,
                 )
             )
 
@@ -178,7 +178,9 @@ class RerankedTopKSampling(TreeSearch):
             hyp_data = self._get_hyp_from_finished(hyp)
             token_ids = self._get_pretty_hypothesis(hyp_data)
             token_metadata = (
-                self._get_pretty_token_metadata(hyp_data) if self.verbose else None
+                [tok.token_details for tok in reversed(hyp_data)]
+                if self.verbose
+                else None
             )
             n_best_list.append((token_ids, hyp.score, token_metadata))
 
